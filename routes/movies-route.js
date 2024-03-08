@@ -28,7 +28,7 @@ const postMovies = (req, res) => {
   const query = `INSERT INTO movies (id, title, genres, year) VALUES ($1, $2, $3, $4)`;
   pool.query(query, [id, title, genres, year], (err, result) => {
     if (err) throw Error(err.message);
-    res.status(200).json({ message: "New Movie Created!" });
+    res.status(200).json({ message: "New Movie Added!" });
   });
 };
 
