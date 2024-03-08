@@ -31,5 +31,8 @@ const authorized = (req, res, next) => {
   }
 };
 
-module.exports = authorized;
-module.exports = verify;
+module.exports = {
+  verify,
+  authorized
+}
+
