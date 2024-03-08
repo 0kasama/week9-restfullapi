@@ -23,16 +23,13 @@ const authorized = (req, res, next) => {
   if (role === "Admin") {
     next();
   } else {
-    res
-      .status(403)
-      .json({
-        message: "Do not have permission!",
-      });
+    res.status(403).json({
+      message: "Do not have permission!",
+    });
   }
 };
 
 module.exports = {
   verify,
-  authorized
-}
-
+  authorized,
+};
