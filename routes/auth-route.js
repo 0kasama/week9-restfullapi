@@ -1,77 +1,45 @@
-const pool = require("../database.js");
-const { hashPassword, comparePassword } = require("../lib/bcrypt.js");
-const { generateToken } = require("../lib/jwt.js");
+const express = require("express");
+const auth = express.Router();
 
-class AuthController {
-  static register = async (req, res, next) => {
-    // role => "admin" || "user"
-    try {
-      const { email, gender, password, role } = req.body;
+const { register, login } = require("../controller/auth-ctrl.js");
 
-      const hashPass = hashPassword(password);
+auth.post("/register", register);
+auth.post("/login", login);
 
-      const insertSQL = `
-              INSERT INTO users(email, gender, password, role)
-                  VALUES
-                      ($1, $2, $3, $4)
-              RETURNING *
-          `;
+module.exports = auth;
 
-      const result = await pool.query(insertSQL, [email, gender, hashPass, role]);
-
-      res.status(201).json(result.rows[0]);
-    } catch (err) {
-      next(err);
-    }
-  };
-
-  static login = async (req, res, next) => {
-    try {
-      const { email, password } = req.body;
-
-      // SEARCH USER by email
-
-      // IF EXISTS compare password (bcrypt)
-      // ELSE Invalid Credentials
-
-      const searchSQL = `
-              SELECT
-                  *
-              FROM
-                  users
-              WHERE email = $1
-          `;
-
-      const result = await pool.query(searchSQL, [email]);
-
-      if (result.rows.length !== 0) {
-        // compare password
-
-        const foundUser = result.rows[0];
-
-        if (comparePassword(password, foundUser.password)) {
-          // generateToken
-
-          const accessToken = generateToken({
-            id: foundUser.id,
-            email: foundUser.email,
-            role: foundUser.role,
-          });
-
-          res.status(200).json({
-            message: "Login Successfull",
-            accessToken,
-          });
-        } else {
-          throw { name: "InvalidCredentials" };
-        }
-      } else {
-        throw { name: "InvalidCredentials" };
-      }
-    } catch (err) {
-      next(err);
-    }
-  };
-}
-
-module.exports = AuthController;
+/**
+ * @swagger
+ * /register:
+ *   post:
+ *     summary: Register
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/User'
+ *     responses:
+ *       200:
+ *         description: Succesfully registered!
+ * /login:
+ *   post:
+ *     summary: Login
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: string
+ *             example: {email: admin@gmail.com, password: admin123}
+ *     responses:
+ *       200:
+ *         description: Login.
+ *         content:
+ *           application/json:
+ *             schema:
+ *              type: string
+ *              example: {token : eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9}
+ */
