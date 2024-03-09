@@ -16,8 +16,7 @@ const AuthController = require("../routes/auth-route.js");
  *             $ref: '#/components/schemas/User'
  *     responses:
  *       200:
- *         description: Successfully Registered!
- *
+ *         description: Succesfully registered!
  * /login:
  *   post:
  *     summary: Login
@@ -27,17 +26,16 @@ const AuthController = require("../routes/auth-route.js");
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/LoginRequest'
+ *             type: string
  *     responses:
  *       200:
- *         description: Login
+ *         description: Login.
  *         content:
  *           application/json:
  *             schema:
- *               type: string
- *               example: {token : eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9}
- *       401:
- *         description: Wrong Email or Password!
+ *              type: string
+ *              example: {token : eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9}
+ * 
  */
 
 auth.post("/register", AuthController.register);

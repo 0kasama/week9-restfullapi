@@ -4,7 +4,7 @@ const pool = require("../database.js");
 // PENGECEKAN TOKEN setelah login
 const authentication = async (req, res, next) => {
   try {
-    console.log(req.headers.authorization, "<<<<");
+    console.log(req.headers.authorization);
 
     if (req.headers.authorization) {
       const accessToken = req.headers.authorization.split(" ")[1];
