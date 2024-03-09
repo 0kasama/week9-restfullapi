@@ -1,6 +1,6 @@
 const express = require("express");
 const users = express.Router();
-const { verify, authorized } = require("../middlewares/auth-mid.js");
+const { authentication, authorization } = require("../middlewares/auth-mid.js");
 
 const {
   getUsers,
@@ -108,12 +108,12 @@ const {
  *         description: Not Found!
  */
 
-users.get("/users", verify, getUsers);
+users.get("/users", authentication, getUsers);
 
 users
   .route("/users/:id")
-  .get(verify, getUserById)
-  .put(verify, authorized, putUsers)
-  .delete(verify, authorized, deleteUsers);
+  .get(authentication, getUserById)
+  .put(authentication, authorization, putUsers)
+  .delete(authentication, authorization, deleteUsers);
 
 module.exports = users;

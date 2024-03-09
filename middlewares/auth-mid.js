@@ -1,35 +1,68 @@
-const jwt = require("jsonwebtoken");
+const { verifyToken } = require("../lib/jwt.js");
+const pool = require("../database.js");
 
-const verify = (req, res, next) => {
+// PENGECEKAN TOKEN setelah login
+const authentication = async (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization;
-    const token = authHeader.split("")[1];
+    console.log(req.headers.authorization, "<<<<");
 
-    jwt.verify(token, "secretKey", (err, decoded) => {
-      if (err) {
-        res.status(401).json({ message: "Unauthorized!" });
-      } else {
-        req.userLogged = { email: decoded.email, role: decoded.role };
+    if (req.headers.authorization) {
+      const accessToken = req.headers.authorization.split(" ")[1];
+
+      const { id, email, role } = verifyToken(accessToken);
+
+      // SEARCH USER BY ID
+
+      const searchSQL = `
+                    SELECT
+                        *
+                    FROM
+                        users
+                    WHERE id = $1
+            `;
+
+      const result = await pool.query(searchSQL, [id]);
+
+      if (result.rows.length > 0) {
+        const foundUser = result.rows[0];
+
+        // Simpan data user kedalam request
+        req.loggedUser = {
+          id: foundUser.id,
+          email: foundUser.email,
+          role: foundUser.role,
+        };
+
         next();
+      } else {
+        throw { name: "Unauthenticated" };
       }
-    });
+    } else {
+      throw { name: "Unauthenticated" };
+    }
   } catch (err) {
-    res.status(401).json({ message: "No Token!" });
+    next(err);
   }
 };
 
-const authorized = (req, res, next) => {
-  const { role } = req.userLogged;
-  if (role === "Admin") {
-    next();
-  } else {
-    res.status(403).json({
-      message: "Do not have permission!",
-    });
+// PENGECEKAN ROLE setelah login
+const authorization = async (req, res, next) => {
+  try {
+    console.log(req.loggedUser);
+    const { role } = req.loggedUser;
+
+    if (role === "admin") {
+      // Allowed to execute
+      next();
+    } else {
+      throw { name: "Unauthorized" };
+    }
+  } catch (err) {
+    next(err);
   }
 };
 
 module.exports = {
-  verify,
-  authorized,
+  authentication,
+  authorization,
 };

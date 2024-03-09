@@ -1,48 +1,77 @@
 const pool = require("../database.js");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
+const { hashPassword, comparePassword } = require("../lib/bcrypt.js");
+const { generateToken } = require("../lib/jwt.js");
 
-const register = (req, res) => {
-  const { id, email, gender, password, role } = req.body;
+class AuthController {
+  static register = async (req, res, next) => {
+    // role => "admin" || "user"
+    try {
+      const { email, gender, password, role } = req.body;
 
-  const query = `INSERT INTO users (id, email, gender, password, role) VALUES ($1, $2, $3, $4, $5)`;
+      const hashPass = hashPassword(password);
 
-  bcrypt.hash(password, 10, (err, hash) => {
-    if (err) throw Error(err.message);
-    pool.query(query, [id, email, gender, hash, role], (err, result) => {
-      if (err) throw Error(err.message);
-      res.status(200).json({ message: "Succesfully Registered!" });
-    });
-  });
-};
+      const insertSQL = `
+              INSERT INTO users(email, gender, password, role)
+                  VALUES
+                      ($1, $2, $3, $4)
+              RETURNING *
+          `;
 
-const login = (req, res) => {
-  const { email, password } = req.body;
+      const result = await pool.query(insertSQL, [email, gender, hashPass, role]);
 
-  const getUserByEmail = `SELECT email, password, role FROM users WHERE email = $1`;
-
-  pool.query(getUserByEmail, [email], (err, result) => {
-    if (err) throw Error(err.message);
-
-    if (result.rows.length > 0) {
-      bcrypt.compare(password, result.rows[0].password, (err, hashResult) => {
-        if (err) throw Error(err.message);
-        if (hashResult) {
-          const token = jwt.sign(
-            { email, role: result.rows[0].role },
-            "secretKey",
-            { expiresIn: "1 Hour" }
-          );
-          res.json({ token });
-        } else {
-          res.status(401).json({ message: "Wrong Email or Password!" });
-        }
-      });
+      res.status(201).json(result.rows[0]);
+    } catch (err) {
+      next(err);
     }
-  });
-};
+  };
 
-module.exports = {
-  register,
-  login,
-};
+  static login = async (req, res, next) => {
+    try {
+      const { email, password } = req.body;
+
+      // SEARCH USER by email
+
+      // IF EXISTS compare password (bcrypt)
+      // ELSE Invalid Credentials
+
+      const searchSQL = `
+              SELECT
+                  *
+              FROM
+                  users
+              WHERE email = $1
+          `;
+
+      const result = await pool.query(searchSQL, [email]);
+
+      if (result.rows.length !== 0) {
+        // compare password
+
+        const foundUser = result.rows[0];
+
+        if (comparePassword(password, foundUser.password)) {
+          // generateToken
+
+          const accessToken = generateToken({
+            id: foundUser.id,
+            email: foundUser.email,
+            role: foundUser.role,
+          });
+
+          res.status(200).json({
+            message: "Login Successfull",
+            accessToken,
+          });
+        } else {
+          throw { name: "InvalidCredentials" };
+        }
+      } else {
+        throw { name: "InvalidCredentials" };
+      }
+    } catch (err) {
+      next(err);
+    }
+  };
+}
+
+module.exports = AuthController;

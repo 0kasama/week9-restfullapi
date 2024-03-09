@@ -1,7 +1,6 @@
 const express = require("express");
 const auth = express.Router();
-
-const { register, login } = require("../routes/auth-route.js");
+const AuthController = require("../routes/auth-route.js");
 
 /**
  * @swagger
@@ -18,7 +17,7 @@ const { register, login } = require("../routes/auth-route.js");
  *     responses:
  *       200:
  *         description: Successfully Registered!
- * 
+ *
  * /login:
  *   post:
  *     summary: Login
@@ -28,8 +27,7 @@ const { register, login } = require("../routes/auth-route.js");
  *       content:
  *         application/json:
  *           schema:
- *             type: string
- *             example: {email: admin@mail.com, password: admin123}
+ *             $ref: '#/components/schemas/LoginRequest'
  *     responses:
  *       200:
  *         description: Login
@@ -42,7 +40,7 @@ const { register, login } = require("../routes/auth-route.js");
  *         description: Wrong Email or Password!
  */
 
-auth.post("/register", register);
-auth.post("/login", login);
+auth.post("/register", AuthController.register);
+auth.post("/login", AuthController.login);
 
 module.exports = auth;

@@ -1,6 +1,6 @@
 const express = require("express");
 const movies = express.Router();
-const { verify } = require("../middlewares/auth-mid.js");
+const { authentication } = require("../middlewares/auth-mid.js");
 const {
   getMovies,
   getMovieById,
@@ -127,12 +127,15 @@ const {
  *         description: Not Found!
  */
 
-movies.route("/movies").get(verify, getMovies).post(verify, postMovies);
+movies
+  .route("/movies")
+  .get(authentication, getMovies)
+  .post(authentication, postMovies);
 
 movies
   .route("/movies/:id")
-  .get(verify, getMovieById)
-  .put(verify, putMovies)
-  .delete(verify, deleteMovies);
+  .get(authentication, getMovieById)
+  .put(authentication, putMovies)
+  .delete(authentication, deleteMovies);
 
 module.exports = movies;
